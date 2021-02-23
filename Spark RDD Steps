@@ -1,0 +1,57 @@
+import pyspark
+from pyspark.sql import Sparksession
+spark = SparkSession.builder.appname("Test RDD Examples").getOrCreate()
+
+type(spark)
+
+
+Creating RDDS
+Using parallelize method
+------------------------
+
+rdd_par = spark.sparkContext.parallelize(["Hello World", "Hope you are not fed up with ABD class"])
+type (rdd_par)
+
+Creating RDD using transformation
+---------------------------------
+
+rdd_trans = rdd_par.filter(lambda word:word.startswith('H'))
+rdd_trans.collect()
+
+o/p
+---
+["Hello World", "Hope you are not fed up with ABD class"]
+
+creating RDD using Data sources
+-------------------------------
+rdd_ds = spark.sparkContext.textFile('D:/input.txt')
+
+o/p
+---
+rdd_ds.count()
+(If we give wrong file name we get the error which is lazy evaluation) else o/p would be 5
+
+rdd_ds.collect() --> will give data inside file
+rdd_ds.flatMap(lambda word: word.split(' ')).collect() --> Will give o/p as split like 'When', 'I', 'Like'
+
+word_rdd = rdd_ds.flatMap(lambda word: word.split(' '))
+freq_words = word_rdd.map(lambda word: (word, 1))
+freq_words.reduceByKey(lambda a,b : a+b) -->o/p would be [('when','1'), ('a', '1')] means word appearing once 
+
+
+columns = ['currency', 'value']
+inputdata = [('Euro',90),('Pound',100), ("Yuan",11)]
+
+#RDD
+
+rdd = spark.sparkContext.parallelize(inputdata)
+rddDF = rdd.toDF()
+df = rddDF.withColumnRenamed('1', 'Currency')
+df.show()
+df = spark.createDataFrame(rdd).toDF(*columns) --> will give currency, value datas
+
+df.write.format('csv').save('D:/test') --> saves 4 files with seperate record with partition
+df.repartition(1).write.format('csv').save('D:/test') --> saves in 1 files with all records
+
+df.rdd.map(lambda x: x[0] + "," +str(x[1])).repartition
+
